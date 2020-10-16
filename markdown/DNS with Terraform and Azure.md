@@ -10,6 +10,7 @@
 <li>Could allow for an approval stage</li>
 <li>Easily audited</li>
 <li>Zero-Trust, separation of duties, role based access control</li>
+<li>Terraform working in Azure DevOps with Stage stored between runs</li>
 </ul>
 <h2 id="dns-subdomain-delegation">DNS Subdomain Delegation</h2>
 <p>One of the first ideas that I came up with was to delegate subdomains to new DNS Zones. That would mean a domain like <a href="http://blog.zaita.com">blog.zaita.com</a> would be able to have it’s own Azure DNS Zone configuration and add it’s own subdomains (e.g. <a href="http://staging.blog.zaita.com">staging.blog.zaita.com</a>) without engaging with the master DNS Zone.</p>
