@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-zaita-com-nginx
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: blog-zaita-com-nginx
+  template:
+    metadata:
+      labels:
+        app: blog-zaita-com-nginx
+    spec:
+      volumes:
+        - name: app-cache
+          emptyDir:
+            sizeLimit: 250Mi   
+      initContainers:
+        - name: blog-zaita-com-nginx-git
+          image: alpine:latest
+          command: ['/bin/sh', '-c']
+          args: ['apk add git && git clone https://github.com/zaita/blog.zaita.com /cache/code && mv /cache/code/_site/* /cache/']
+          volumeMounts:
+            - mountPath: /cache
+              name: app-cache
+      containers:
+        - name: blog-zaita-com-nginx
+          image: nginx:stable
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: web
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: app-cache            
