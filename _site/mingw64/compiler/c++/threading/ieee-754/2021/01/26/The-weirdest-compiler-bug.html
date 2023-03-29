@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>The weirdest compiler bug | Scott Rasmussen (Zaita) Blog</title>
+<meta name="generator" content="Jekyll v4.3.2" />
+<meta property="og:title" content="The weirdest compiler bug" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="When the same code produces different results in a thread…" />
+<meta property="og:description" content="When the same code produces different results in a thread…" />
+<link rel="canonical" href="blog.zaita.com/mingw64/compiler/c++/threading/ieee-754/2021/01/26/The-weirdest-compiler-bug.html" />
+<meta property="og:url" content="blog.zaita.com/mingw64/compiler/c++/threading/ieee-754/2021/01/26/The-weirdest-compiler-bug.html" />
+<meta property="og:site_name" content="Scott Rasmussen (Zaita) Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-26T13:00:00+13:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The weirdest compiler bug" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2021-01-26T13:00:00+13:00","datePublished":"2021-01-26T13:00:00+13:00","description":"When the same code produces different results in a thread…","headline":"The weirdest compiler bug","mainEntityOfPage":{"@type":"WebPage","@id":"blog.zaita.com/mingw64/compiler/c++/threading/ieee-754/2021/01/26/The-weirdest-compiler-bug.html"},"url":"blog.zaita.com/mingw64/compiler/c++/threading/ieee-754/2021/01/26/The-weirdest-compiler-bug.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="blog.zaita.com/feed.xml" title="Scott Rasmussen (Zaita) Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Scott Rasmussen (Zaita) Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">The weirdest compiler bug</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-01-26T13:00:00+13:00" itemprop="datePublished">Jan 26, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>There are approximately 7.5x10^18 grains of sand on Earth. This story is about finding changes in an equation that has a difference of approximately 1e-18 out of hundreds of billions of calculations. That is 7 grains of sand that are different to what we expect across the entire planet Earth.</p>
+
+<p>After spending days generating gigabytes of debug logs and GDB breakpoints, I finally discovered a very peculiar bug in the compiler. I thought this would be an interesting story to tell.</p>
+
+<p><strong>Update: Thanks to gus_massa and wiml @ HackerNews for pointing out I had used associative instead of commutative</strong></p>
+
+<h2 id="background">Background</h2>
+
+<p>Back in 2008 I started developing a scientific modelling platform called the <a href="https://niwa.co.nz/fisheries/tools-resources/spatial-population-modelling">Spatial Population Model (SPM)</a>. This software is designed to model or simulate and ocean environments to approximate the health of fish stocks. The output of SPM is used to create scientific reports that are given to Governments for the setting of commercial fishing quota.</p>
+
+<p>Due to the political nature of these reports, reproducibility and integrity of results is crucial. Scientists from around the world will use the software to re-run models across different Operating Systems and compilers to validate results.</p>
+
+<p>Since it was 2008, it was decided that SPM would not be multi-threaded. This is because of: no C++ standard threading, average computer had 2 cores, incompatibility with auto-differentiation libraries)</p>
+
+<p>Fast forward to 2020/21 where many-core systems are commonplace. I had recently acquired for myself an AMD 5950X 16c/32t CPU and was keen to apply it to some modelling work. SPM is still in use as a world leading spatial modelling platform and has received continual updates. I’ve had a long interest in bringing concurrency to SPM to invent new methods of scientific modelling that evolve the underlying mathematics. As a proof of concept, I wanted to start working through threading the internal gradient calculation. Models in SPM are user defined and can be enormous (&gt;100k lines of input text) so we’re unable to analytically determine the gradient function through auto-differentiation. We use an iterative approach tweaking model parameters to calculate the gradient. These tweaks are independent and therefore can be parallelised.</p>
+
+<p>This seemed like a relatively straight forward piece of work. I would need to:</p>
+<ol>
+  <li>Move all of the classes to be children of a new Model class</li>
+  <li>Remove all singletons</li>
+  <li>Keep the floating-point operations in the exact same order when calculate on the main thread (IEEE-754)</li>
+  <li>Support an arbitrary number of threads</li>
+  <li>Produce identical results regardless of the number of threads, Operating System or compiler</li>
+</ol>
+
+<h2 id="ieee-754-or-the-floating-point-nightmare">IEEE-754 or the floating-point nightmare</h2>
+
+<p>The development of scientific modelling platforms like SPM requires a significant amount of thought and effort around reproducibility. Given the same input files, any user must be able to re-run your model and get the exact same answer out. This seems incredibly obvious, but it’s not….</p>
+
+<p><a href="https://en.wikipedia.org/wiki/IEEE_754">IEEE-754</a> is the standard for floating-point arithmetic. Floating point math in computers is an approximation. Whenever you see a floating point value it is highly unlikely to be completely accurate. Floating-point arithmetic is commutative, but not associative. So for floating-point numbers,
+A + B = B + A always, but
+A + (B + C) != (A + B) + C in many cases.
+The order in which operations occur within your model will influence the output. While this is inconsequential for small programs or games; this continual adding of errors for scientific models where the number of operations is in the hundreds of billions is consequential.</p>
+
+<p>Every thread we spawn must run the same operations in the exact same order. When the threads give their results back to the main thread, they must do so in a way that ensures that all future operations happen in the exact same order. This is regardless of the number of threads or number of parameters in the model.</p>
+
+<p><em>Side Note: Within scientific models, we use double precision numbers (double) and not single precision (float). Single precision does not have enough precision to handle the number of calculations required. At the end of a model the error added by the approximation of floating-point math is very significant. This limits us to using CPUs over GPUs as the double precision performance of GPUs is not that much better than a modern CPU when you have to factor in the added complexity of writing GPU specific code.</em></p>
+
+<h2 id="the-first-signs-of-trouble">The first signs of trouble</h2>
+
+<p>With my task list ready, I started to work through re-factoring the code. Everything was modified to use a central model class as the parent for the system. This allows me to spawn as many model classes as threads. Everything was compiling and running without crashes. Time to check the output..</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1999.818926297566804 // original score running no threads
+1999.8189264475995515 // my new score running 32 threads
+</code></pre></div></div>
+<p>A slight difference, nothing to be concerned about as I had probably changed the order of execution for some of the equations by threading them. I was testing with a small model that ran in &lt;5 seconds, so working through each of the instantiated classes to check the code won’t take too long. Another day down and nothing obvious was found. Time to run the application through GDB and the <a href="https://en.wikipedia.org/wiki/AddressSanitizer">Sanitizers</a> looking for issues…. nope nothing there either.</p>
+
+<p>A simple model will have recruitment/breeding, ageing and death. I started to reduce and simplify the processes in the model to see if I could identify any key process or parameter. I removed the random number generate and commented out a large amount of complex math…. but still no luck.</p>
+
+<h2 id="down-the-rabbit-hole-of-debug-logging-and-gdb">Down the rabbit hole of debug logging and GDB</h2>
+
+<p>After three days of trying to find the issue, I had added a LARGE amount of debug logging and had resorted to doing step throughs in GDB looking for a point at which I would notice a change in the result. The log files were 20MBs+ and the model would only show issues after a few iterations… why not immediately?</p>
+
+<p>Was I calling a function later in the model that had the issue? Or was the issue starting earlier but at a greater precision that I was printing. I was printing my debug output with a <a href="https://en.cppreference.com/w/cpp/io/manip/setprecision">precision</a> of 15. Time to increase the precision to 20. This is basically the maximum amount of precision you can print from a double with accuracy. I did a few more model runs and saw that the variation in results had moved to much earlier in the model… almost immediately.</p>
+
+<p>The model would load the configuration file, then construct all of the user defined objects in memory. As part of constructing these objects a bunch of calculations would be run to build caches. To save on moving data between threads each thread would repeat the same process. Every new thread would get the configuration file that had been loaded, create all of the objects and run the initial calculations. GDB showed that even these initial calculates were having different results.</p>
+
+<p>My working folder was littered with files named “fuck”, “fuck1” and “fuckN” each with more than 20MBs of debug output for a small model run. Diff was run across files to see where changes were occurring and how small they were… But still no luck.. everything was going wrong almost immediately but I had no idea why.</p>
+
+<h2 id="surely-its-not-a-compiler-bug">Surely it’s not a compiler bug?</h2>
+
+<p>SPM uses the GCC and MinGW64 compilers. This allows us to have near-identical code for Windows and Linux with common makefiles. I have always preferred <a href="https://jmeubank.github.io/tdm-gcc/">TDM-GCC</a> as this has a current release. In this instance, TDM-GCC 9.2.0 from March 2020. Running the sanitizers was done on OpenSuSe Tumbleweed Linux using GCC 10.2.1. These are both very modern versions of the GCC compiler suite. I have never been one to blame tools for a bug in my code.</p>
+
+<p>At this point, I am way down the rabbit hole trying to find the cause of this bug. Some testing had shown me that:</p>
+<ul>
+  <li>The original binary would produce the same result on every run</li>
+  <li>My new binary would produce the same result on every run, but different to the original</li>
+  <li>My new binary would produce the same result regardless of the number of threads.. from 1 to 100</li>
+</ul>
+
+<p>That last observation made me curious. Why did my new code produce a different result when I ran it with only one thread? What would make it different from the original binary. Having only 1 thread that was executing would eliminate any race conditions.</p>
+
+<p>In the original binary, we do not create any threads. We load the model, build and run it. In the new code, even with one thread we create that thread, load the model, build and run it. What was I doing during the thread creation process that would cause this issue? Time for GBs of log files and GDB.</p>
+
+<p>Stepping through every operation to validate the output lead me into what we call a selectivity. This is a static piece of code that takes an input, calls a standard simple piece of math and returns an output. These few lines of code had returned different results in a thread and not. Time to analyse the following code:</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">double</span> <span class="n">CLogisticSelectivity</span><span class="o">::</span><span class="n">calculateResult</span><span class="p">(</span><span class="kt">int</span> <span class="n">Age</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="n">dRet</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">dTemp</span> <span class="o">=</span> <span class="p">(</span><span class="n">dA50</span><span class="o">-</span><span class="n">Age</span><span class="p">)</span><span class="o">/</span><span class="n">dAto95</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">dTemp</span> <span class="o">&gt;</span> <span class="mf">5.0</span><span class="p">)</span>
+      <span class="n">dRet</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">dTemp</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">)</span>
+      <span class="n">dRet</span> <span class="o">=</span> <span class="n">dAlpha</span><span class="p">;</span>
+    <span class="k">else</span>
+      <span class="n">dRet</span>  <span class="o">=</span> <span class="n">dAlpha</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="n">pow</span><span class="p">(</span><span class="mf">19.0</span><span class="p">,</span><span class="n">dTemp</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">dRet</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>If I gave the code Age = 1 then ran it I got the following results:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Local  = 0.0010370292068795884059
+Thread = 0.0010370292068795879722
+</code></pre></div></div>
+
+<p>What gives? There is nothing in here that should be different in a thread. I am not passing in anything but an int with the value of 1. I edited the code to make dA50 and dAto95 local variables to remove any potential race conditions or thread wonkiness and still had the same error in output. Everything was initialized within the same function and the only external value was an Integer. Weird….</p>
+
+<h2 id="compiler-bug-but-how">Compiler bug? But how…</h2>
+
+<p>Looking at the code, the only things that could create the bug were the operators and pow() call. These are part of the C++ standard offering so it’s highly unlikely that either of these would have an error. What next? Off to <a href="https://godbolt.org/">GodBolt</a> to try some other compilers to see if I get wonky results on them. MSVC++… nope, Clang… nope, GCC-Trunk on Linux… nope. I am only getting this weird behaviour in TDM-GCC. Time to try some other MingW64 compilers. <a href="https://nuwen.net/mingw.html">Nuwen</a>… Yes, <a href="http://mingw-w64.org/doku.php">Mingw64</a>.. yes, TDM-GCC… yes.</p>
+
+<p>Confirmed: It’s a bug in MinGW64.</p>
+
+<p>When I create a new thread and run floating point operations in that thread, I get slightly different answers.</p>
+
+<h2 id="getting-it-fixed-well-soon">Getting it fixed.. well soon…</h2>
+
+<p>Off to SourceForge I went to log a <a href="https://sourceforge.net/p/mingw-w64/bugs/867/">bug</a>. After waiting a month and getting no response I jumped on IRC to ask the same question. Within 24 hours my issue had a comment indicating that it had been <a href="https://sourceforge.net/p/mingw-w64/mingw-w64/ci/295fafcf584ce105426045b03d17aa90d105808d/">fixed</a>. This had not yet picked up by any of the pre-built distributions.</p>
+
+<p>New threads were not calling <a href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/fpreset?view=msvc-160">_fpreset()</a> when they were constructed, which “reinitializes the floating-point math package”. This would mean that the default values used within floating point arithmetic would be slightly different when you were inside a thread.</p>
+
+<p>As there have not been any downstream versions of MinGW64 that have this fix, I have had to resort to calling _fpreset() within the threads myself. A dirty but, but effective fix.</p>
+
+<p>All n all. I spent around 5 days chasing this bug through my code. I generated Gigabytes of log files and had to get down to the precision of 7.5 grains of sand on the planet Earth. The compiler missing a key function call turned out to be the cause of the issue. Many times, while trying to find the root cause I found myself questioning my ability to write code, diagnose bugs and remain sane. I’m glad I found an answer and have a way forward.</p>
+
+<p>When the code was tested with an AMD 5950X and 32 threads, solving a model went from 23.5 hours to 90 minutes. This was a substantial improvement and this work alone provides significant new opportunities for iterating through models when developing scientific reports.</p>
+
+  </div><a class="u-url" href="/mingw64/compiler/c++/threading/ieee-754/2021/01/26/The-weirdest-compiler-bug.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Scott Rasmussen (Zaita) Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Scott Rasmussen (Zaita) Blog</li><li><a class="u-email" href="mailto:scott@zaita.com">scott@zaita.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/zaita"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">zaita</span></a></li><li><a href="https://www.linkedin.com/in/zaita"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">zaita</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>This blog covers my personal views, opinions and experiences. It does not represent my employer or clients in any way. For professional contact, please use my linkedin profile.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

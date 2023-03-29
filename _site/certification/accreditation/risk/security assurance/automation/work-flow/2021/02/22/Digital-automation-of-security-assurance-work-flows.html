@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Digital automation of security assurance work-flows | Scott Rasmussen (Zaita) Blog</title>
+<meta name="generator" content="Jekyll v4.3.2" />
+<meta property="og:title" content="Digital automation of security assurance work-flows" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Reducing noise for security professionals by automating the security assurance life-cycle" />
+<meta property="og:description" content="Reducing noise for security professionals by automating the security assurance life-cycle" />
+<link rel="canonical" href="blog.zaita.com/certification/accreditation/risk/security%20assurance/automation/work-flow/2021/02/22/Digital-automation-of-security-assurance-work-flows.html" />
+<meta property="og:url" content="blog.zaita.com/certification/accreditation/risk/security%20assurance/automation/work-flow/2021/02/22/Digital-automation-of-security-assurance-work-flows.html" />
+<meta property="og:site_name" content="Scott Rasmussen (Zaita) Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-02-22T13:00:00+13:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Digital automation of security assurance work-flows" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2021-02-22T13:00:00+13:00","datePublished":"2021-02-22T13:00:00+13:00","description":"Reducing noise for security professionals by automating the security assurance life-cycle","headline":"Digital automation of security assurance work-flows","mainEntityOfPage":{"@type":"WebPage","@id":"blog.zaita.com/certification/accreditation/risk/security%20assurance/automation/work-flow/2021/02/22/Digital-automation-of-security-assurance-work-flows.html"},"url":"blog.zaita.com/certification/accreditation/risk/security%20assurance/automation/work-flow/2021/02/22/Digital-automation-of-security-assurance-work-flows.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="blog.zaita.com/feed.xml" title="Scott Rasmussen (Zaita) Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Scott Rasmussen (Zaita) Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Digital automation of security assurance work-flows</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-02-22T13:00:00+13:00" itemprop="datePublished">Feb 22, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Note: This post is not about selling a product. The security assurance work flow product I am describing is open source and free for everyone. We even provide a default configuration that is based on our own internal security assurance life-cycle for free. This is not a sales pitch. If you’d rather just jump straight to the <a href="https://github.com/NZTA/SDLT/wiki">SDLT Wiki</a>, please feel free.</p>
+
+<h2 id="copying-and-evolving">Copying and evolving</h2>
+
+<p>At the end of 2018 I attended <a href="https://2018.kiwicon.org">Kiwicon</a> and enjoyed a talk from Slack about their <a href="https://github.com/slackhq/goSDL">Security Development Tool</a>. This was an interesting talk as I am incredibly lazy… and enjoy automating tasks that do not provide any value add from my time. Coincidentally, the following Monday I was approached by one of our engineering managers to automate security assurance practices into their devops processes better. They were doing their own thing as the organisation had failed to provide them an adequate security life-cycle. Aha! I thought, the Slack SDL fits this perfectly.</p>
+
+<p>Fast forward 24 hours and we had a working copy of the goSDL running internally, and we were most disappointed. The goSDL provided us some check-lists, but they were really aimed at assessing a single product through a largely static process. We have &gt;1,600 systems. It was very rudimentary and required quite a lot of knowledge by the submitter to complete. While it did provide a risk rating, it didn’t provide any context or next steps. We determined that we’d struggle to gain value from it, but we really liked the concept.</p>
+
+<p>I spoke to the Head of Security and asked for a few weeks to expand on the concept with my own proof of concept. Two weeks later I had a demo of what I had nicknamed the SDLT or Security Development Life-cycle Tool. The user could pick from different deliverable types and then get assigned tasks relevant to their delivery. Everything was handled in this simple web-app. The feedback was immediately positive and the organisation offered to fund a version 1.</p>
+
+<p><em>Note: Funny enough, a member of the devops team thought the proof of concept was a real product and made an actual submission for a change he was working on, so that was definitely something that helped me get funding.</em></p>
+
+<h2 id="building-and-selling-the-concept">Building and selling the concept</h2>
+
+<p>In my mind, I wanted to have a customisable work-flow system for our security assurance life-cycle. I researched and reached out to some vendors to see what was in the market, but the same four problems always came up.</p>
+<ol>
+  <li>The licencing costs would be like $500k/pa</li>
+  <li>The product didn’t come with any default work-flows, we’d have to customise our own</li>
+  <li>They had broken risk assessment concepts</li>
+  <li>They required programming or scripting</li>
+</ol>
+
+<p>This didn’t sit well with me. Why would I pay $500k/pa only to have to build all the logic I wanted. Why can’t I have something that is effectively drag-n-drop with simple customisations. I really wanted something that allowed me to build simple representations of flow-charts. Some of them talked about their alignment to the New Zealand Information Security Manual, but when we inquired more they were just dumb control lists that weren’t part of a wider process. Nobody provided an out of the box, easily customisable end-to-end assurance life-cycle.</p>
+
+<p>I had some further discussions with the Head of Security and decided to bite the bullet and take the funding to build our own version 1. Surely if we built something useful for us, it’d be useful for other organisations? So why not open source it? We’re a public sector organisation, so there is no benefit in keeping it closed source. After some.. tough discussions with our procurement team, I was able to get a contract sorted that ensured the product would remain open source under the BSD licence. The organisation would pay a retainer to a local development company to manage the project for us… win win fucking win!</p>
+
+<p>I reached out to contacts I had at Catalyst NZ Ltd who an open source development specialist organisation to see if they’d be interested in coming on board as our development partner; they jumped at the chance. We would be the first NZ Government Agency to fund an open source project. I wanted to take it a step forward and got approval to open source our own internal flows and configurations. This means that anyone who picked up the SDLT would be able to start with our working flows as a base and improve from there. A full security assurance tool out of the box for no cost.. fuck yes.</p>
+
+<h2 id="what-the-hell-am-i-building">What the hell am I building?</h2>
+
+<p>Well. I want something that is like a flow chart. The user would see a set of questions on the front end, and we’d have some basic logic on the back end to only do relevant things. Right, time for some key principles.</p>
+<ol>
+  <li>Shortest Path First - The user only sees or answers questions that are relevant.</li>
+  <li>Only what is needed - Only give the user tasks that are necessary</li>
+  <li>Reduce the noise - Try to do everything without a Security staff member as much as possible</li>
+  <li>80% Hands off - 80% of all submissions shouldn’t require any special effort</li>
+  <li>Conquer the world - Start with security, but rope in other teams and stakeholders with tasks</li>
+</ol>
+
+<p>These seem like a good place to start.  My concept was a security assurance work-flow tool that would handle &gt;80% of all deliveries we did without requiring a dedicated security resource. We’d handle our obligations under the Privacy Act, Public Records Act and Official Information Act through the tool. We’d support different deliverable types including proof of concept, software trial, software as a service adoption, project release, technical change and bug fixes. We’d deliver this as a Software as a Service web application.</p>
+
+<p>The product would be open source, free for everyone and we’d provide our own internal configuration (flows/tasks etc) for nothing.</p>
+
+<h2 id="what-is-the-security-development-life-cycle-tool">What is the Security Development Life-cycle Tool?</h2>
+
+<p>The SDLT is a web application that walks a user through the security assurance life-cycle. They’re taken step-by-step through all of the tasks they need to complete and submit to key stakeholders through a single platform. Where their deliverable has Privacy concerns, they’ll be taken through a Privacy Threshold Assessment task that is automatically emailed to the Privacy Officers for approval. Approvals on all tasks and the submission are handled within the tool; no more printing/signing and scanning documents.</p>
+
+<p>The SDLT provides a single front door to Security (and more… see below) for the organisation. The process is objective, repeatable, auditable and optimised.</p>
+
+<p><em>Note: I say front door to security, but the reality is that we’ve also incorporated PCI-DSS, Privacy and Information Management as key stakeholders with their own tasks. There is work happening to also include procurement, legal and vendor services as well effectively making it a single front door for “go-live”</em></p>
+
+<h2 id="the-high-level-user-flow">The high level user flow</h2>
+
+<p>The user would land on the front page and select the type of deliverable that they had. We’d bunch them into 4 categories that we call pillars.</p>
+<ol>
+  <li>Proof of Concept or Software Trial</li>
+  <li>Software as a Service</li>
+  <li>Solution/Project Delivery or Initial Software Release</li>
+  <li>Technical Change, Feature Release or Bug-Fix</li>
+</ol>
+
+<p>After selecting the deliverable type, they’d go into the parent questionnaire assigned to that pillar. The pillar questionnaire would ask key information about the deliverable. Who is the business owner? Will you deal with any personal information? Will you be exposing any new public services? When is your go live? 
+Depending on how the user answers, the submission would have tasks assigned for the user to complete prior to being able to submit for approval. If the user answers yes to personal information, then they have to do a Privacy Threshold Assessment. If they answer yes to exposing new public services, then they have to do a penetration test. Out of the box, we have approximately 30 tasks.</p>
+
+<p>Tasks are broken down into 2 major types.</p>
+<ol>
+  <li>Where the task is completed externally. We provide a link to the user from the SDLT task to the document they must complete. Then we ask for a link to where they have stored the completed document in our document management system.</li>
+  <li>The task is completed entirely within the SDLT. We ask for information from the user and the tool determines the next steps.</li>
+</ol>
+
+<p>Once a user has completed all assigned tasks on their submission, they can send the entire submission through for approval. The submission would be sent to the Security Architect team to review and approve. After a Security Architect has approved, the submission will be sent to the Chief Information Security Officer for a recommendation approval and to the Business Owner to formally approve and accept the associated risks.</p>
+
+<h2 id="doing-it-without-programming">Doing it without programming</h2>
+
+<p>The SDLT is designed to be edited by people without a development background. We use SilverStripe as a CMS and everything is built on top of that. When adding a button to a question you can create an action to assign. The button can give the user a message, skip ahead to another question or allocate a task to be created on the submission.</p>
+
+<p>For more information about the different types of tasks we provide out of the box please check out the <a href="https://github.com/NZTA/SDLT/wiki/Basic-Concepts:-Tasks">wiki</a></p>
+
+<h2 id="success-or-failure">Success or failure?</h2>
+
+<p>The SDLT was built on the crazy idea of building an open source work-flow tool for automating security assurance. Nothing in the market did what we wanted out of the box and those that provided frameworks wanted to be paid in kilograms of gold.</p>
+
+<p>Two years on, we’ve had more than 400 submissions through the SDLT. Over 75% of those would never have come to security due to lack of resourcing and process. Our primary focus has been increasing adoption so that we can increase visibility of what is happening. We believe this has been incredible successful.</p>
+
+<p>For those who noticed, above I noted that off the shelf products had terrible risk assessment concepts. We went on to build SDLT version 2 that includes a digital security risk assessment methodology. As this is a topic in it’s own right, I’ll write about this next. For those who are too keen to wait to hear more about this please check out the <a href="https://github.com/NZTA/SDLT/wiki/Basic-Concepts:-DSRA">GitHub Wiki</a>. The TLDR is that we can automate the risk assessment process from start to finish and have it meaningful and measurable over time.</p>
+
+<h2 id="how-do-i-get-it">How do I get it?</h2>
+
+<p>As mentioned, the SDLT is open source. You can grab a copy from the <a href="https://github.com/NZTA/SDLT">GitHub Repository</a> and follow the <a href="https://github.com/NZTA/SDLT/wiki">Wiki Instructions</a> to deploy it.</p>
+
+<p>Alternatively, Catalyst have stood up a <a href="https://www.catalyst.net.nz/products/security-development-lifecycle-tool">SDLT SaaS product</a> that can be subscribed too. This is ideal for larger organisations who want to ensure they get updates and bug-fixes as we develop them.</p>
+
+<h2 id="free-screenshots">Free screenshots</h2>
+<p>If you just want to see what it looks like, here are some handy screenshots.</p>
+
+<p>The SDLT Landing Page:
+<img src="/images/sdlt_landing_page.png" alt="The landing page" />
+Answering questions within a pillar:
+<img src="/images/sdlt_pillar.png" alt="Answering questions within a pillar:" />
+The summary screen listing tasks to be completed:
+<img src="/images/sdlt_summary.png" alt="The summary screen listing tasks to be completed" />
+An example task questionnaire with a result:
+<img src="/images/sdlt_task_result.png" alt="An example task questionnaire with a result" /></p>
+
+  </div><a class="u-url" href="/certification/accreditation/risk/security%20assurance/automation/work-flow/2021/02/22/Digital-automation-of-security-assurance-work-flows.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Scott Rasmussen (Zaita) Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Scott Rasmussen (Zaita) Blog</li><li><a class="u-email" href="mailto:scott@zaita.com">scott@zaita.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/zaita"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">zaita</span></a></li><li><a href="https://www.linkedin.com/in/zaita"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">zaita</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>This blog covers my personal views, opinions and experiences. It does not represent my employer or clients in any way. For professional contact, please use my linkedin profile.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
